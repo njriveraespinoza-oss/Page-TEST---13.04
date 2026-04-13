@@ -1,0 +1,1087 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SIGNAL — Veille IA · Semaine 7–13 Avril 2026</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300..700&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/gsap@3/dist/gsap.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3/dist/ScrollTrigger.min.js"></script>
+<script src="https://unpkg.com/splitting/dist/splitting.min.js"></script>
+<link rel="stylesheet" href="https://unpkg.com/splitting/dist/splitting.css">
+<style>
+/* ── TOKENS ─────────────────────────────────────────────── */
+:root {
+  --bg: #060608;
+  --surface: #0d0d10;
+  --surface-2: #13131a;
+  --border: rgba(255,255,255,0.06);
+  --text: #e8e6f0;
+  --text-muted: #7a7889;
+  --text-faint: #3a3848;
+  --accent: #c8ff00;
+  --accent-2: #ff4d6d;
+  --accent-3: #00d4ff;
+  --font-display: 'Space Mono', monospace;
+  --font-body: 'Space Grotesk', sans-serif;
+}
+
+/* ── RESET ───────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: clamp(1rem, 0.95rem + 0.25vw, 1.125rem);
+  line-height: 1.6;
+  overflow-x: hidden;
+  cursor: none;
+}
+::selection { background: var(--accent); color: #000; }
+
+/* ── CUSTOM CURSOR ───────────────────────────────────────── */
+#cursor-dot {
+  position: fixed; width: 8px; height: 8px;
+  background: var(--accent); border-radius: 50%;
+  pointer-events: none; z-index: 9999;
+  transform: translate(-50%, -50%);
+  transition: transform 0.05s, opacity 0.2s;
+  mix-blend-mode: difference;
+}
+#cursor-ring {
+  position: fixed; width: 32px; height: 32px;
+  border: 1px solid rgba(200, 255, 0, 0.4);
+  border-radius: 50%; pointer-events: none; z-index: 9998;
+  transform: translate(-50%, -50%);
+  transition: transform 0.12s cubic-bezier(0.16,1,0.3,1),
+              width 0.3s, height 0.3s, opacity 0.2s;
+}
+body:has(a:hover) #cursor-ring,
+body:has(button:hover) #cursor-ring { width: 56px; height: 56px; }
+
+/* ── NOISE OVERLAY ───────────────────────────────────────── */
+body::before {
+  content: '';
+  position: fixed; inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+  pointer-events: none; z-index: 9997;
+}
+
+/* ── PROGRESS BAR ────────────────────────────────────────── */
+#progress {
+  position: fixed; top: 0; left: 0; height: 2px;
+  background: var(--accent); transform-origin: left;
+  transform: scaleX(0); z-index: 1000; will-change: transform;
+}
+
+/* ── NAV ─────────────────────────────────────────────────── */
+nav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+  padding: 1.5rem 2.5rem;
+  display: flex; align-items: center; justify-content: space-between;
+  mix-blend-mode: normal;
+}
+.nav-logo {
+  font-family: var(--font-display); font-size: 0.75rem;
+  letter-spacing: 0.3em; text-transform: uppercase; color: var(--accent);
+  text-decoration: none;
+}
+.nav-meta {
+  font-family: var(--font-display); font-size: 0.65rem;
+  color: var(--text-muted); letter-spacing: 0.15em;
+  text-transform: uppercase;
+}
+.nav-index {
+  display: flex; gap: 1.5rem; list-style: none;
+}
+.nav-index a {
+  font-family: var(--font-display); font-size: 0.65rem;
+  color: var(--text-faint); text-decoration: none;
+  letter-spacing: 0.15em; text-transform: uppercase;
+  transition: color 0.2s;
+}
+.nav-index a:hover { color: var(--accent); }
+
+/* ── HERO ────────────────────────────────────────────────── */
+#hero {
+  min-height: 100dvh;
+  display: flex; flex-direction: column;
+  justify-content: flex-end;
+  padding: clamp(2rem, 6vw, 5rem);
+  position: relative; overflow: hidden;
+}
+.hero-bg-grid {
+  position: absolute; inset: 0;
+  background-image:
+    linear-gradient(rgba(200,255,0,0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(200,255,0,0.025) 1px, transparent 1px);
+  background-size: 60px 60px;
+  animation: gridPulse 8s ease-in-out infinite alternate;
+}
+@keyframes gridPulse {
+  from { opacity: 0.4; }
+  to { opacity: 1; }
+}
+.hero-scan {
+  position: absolute; left: 0; right: 0; height: 1px;
+  background: linear-gradient(90deg, transparent, var(--accent), transparent);
+  opacity: 0.3; animation: scan 6s linear infinite;
+}
+@keyframes scan { from { top: 0; } to { top: 100%; } }
+
+.hero-eyebrow {
+  font-family: var(--font-display); font-size: clamp(0.6rem, 0.8vw, 0.75rem);
+  color: var(--accent); letter-spacing: 0.4em;
+  text-transform: uppercase; margin-bottom: 2rem;
+  opacity: 0;
+}
+.hero-title {
+  font-family: var(--font-display);
+  font-size: clamp(3.5rem, 12vw, 10rem);
+  font-weight: 700; line-height: 0.88;
+  color: var(--text); letter-spacing: -0.04em;
+  margin-bottom: 3rem;
+}
+.hero-title .line-2 { color: var(--accent); }
+.hero-bottom {
+  display: flex; justify-content: space-between; align-items: flex-end;
+  gap: 2rem;
+}
+.hero-descriptor {
+  max-width: 380px;
+  font-size: clamp(0.875rem, 1vw, 1rem);
+  color: var(--text-muted); line-height: 1.5;
+  opacity: 0;
+}
+.hero-scroll-cue {
+  font-family: var(--font-display); font-size: 0.6rem;
+  color: var(--text-faint); letter-spacing: 0.3em;
+  text-transform: uppercase; writing-mode: vertical-rl;
+  display: flex; align-items: center; gap: 0.75rem;
+  opacity: 0;
+}
+.hero-scroll-cue::before {
+  content: ''; width: 1px; height: 60px;
+  background: linear-gradient(to bottom, var(--accent), transparent);
+}
+
+/* ── SECTION STRUCTURE ───────────────────────────────────── */
+section {
+  padding: clamp(4rem, 8vw, 8rem) clamp(1.5rem, 5vw, 4rem);
+  position: relative;
+}
+.section-label {
+  font-family: var(--font-display); font-size: 0.65rem;
+  letter-spacing: 0.35em; text-transform: uppercase;
+  color: var(--accent); margin-bottom: 3rem;
+  display: flex; align-items: center; gap: 1rem;
+}
+.section-label::before {
+  content: ''; flex: 0 0 40px; height: 1px;
+  background: var(--accent);
+}
+.section-number {
+  font-family: var(--font-display); font-size: 0.6rem;
+  color: var(--text-faint); margin-right: 1rem;
+}
+
+/* ── SHIFTS SECTION ──────────────────────────────────────── */
+#shifts {
+  background: var(--bg);
+  border-top: 1px solid var(--border);
+}
+.shifts-intro {
+  font-family: var(--font-display);
+  font-size: clamp(1.8rem, 4vw, 3.5rem);
+  line-height: 1.05; font-weight: 700;
+  max-width: 800px; margin-bottom: 5rem;
+  color: var(--text);
+}
+.shifts-intro em { color: var(--accent); font-style: normal; }
+
+.shift-item {
+  display: grid; grid-template-columns: 80px 1fr;
+  gap: 0 3rem; padding: 2.5rem 0;
+  border-bottom: 1px solid var(--border);
+  opacity: 0; transform: translateY(20px);
+  transition: opacity 0.5s ease, transform 0.5s ease;
+  cursor: default;
+}
+.shift-item.visible { opacity: 1; transform: none; }
+.shift-item:hover .shift-title { color: var(--accent); }
+
+.shift-num {
+  font-family: var(--font-display); font-size: 0.6rem;
+  color: var(--text-faint); padding-top: 0.4rem;
+  letter-spacing: 0.1em; align-self: start;
+}
+.shift-body {}
+.shift-title {
+  font-family: var(--font-display);
+  font-size: clamp(1.1rem, 2.2vw, 1.5rem);
+  font-weight: 700; margin-bottom: 0.75rem;
+  transition: color 0.2s; line-height: 1.2;
+}
+.shift-desc {
+  color: var(--text-muted); font-size: 0.95rem;
+  max-width: 600px; line-height: 1.55;
+}
+.shift-tag {
+  display: inline-block; margin-top: 0.75rem;
+  font-family: var(--font-display); font-size: 0.55rem;
+  letter-spacing: 0.25em; text-transform: uppercase;
+  padding: 0.25rem 0.75rem;
+  border: 1px solid var(--accent-3);
+  color: var(--accent-3); border-radius: 999px;
+}
+
+/* ── SIGNALS TICKER ──────────────────────────────────────── */
+#signals {
+  overflow: hidden; padding-top: 0; padding-bottom: 0;
+}
+.ticker-wrap {
+  padding: 1.5rem 0;
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  overflow: hidden;
+}
+.ticker-track {
+  display: flex; gap: 0;
+  animation: ticker 35s linear infinite;
+  width: max-content;
+}
+.ticker-track:hover { animation-play-state: paused; }
+@keyframes ticker {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+.ticker-item {
+  display: flex; align-items: center; gap: 1.5rem;
+  padding: 0 3rem; white-space: nowrap;
+  font-family: var(--font-display); font-size: 0.65rem;
+  letter-spacing: 0.15em; text-transform: uppercase;
+  color: var(--text-muted);
+}
+.ticker-dot {
+  width: 4px; height: 4px; border-radius: 50%;
+  background: var(--accent);
+}
+.ticker-item.hot .ticker-dot { background: var(--accent-2); }
+.ticker-item.cold .ticker-dot { background: var(--accent-3); }
+
+/* ── SIGNALS GRID ────────────────────────────────────────── */
+#signals-grid {
+  padding-top: 5rem;
+}
+.signals-title {
+  font-family: var(--font-display);
+  font-size: clamp(0.75rem, 1vw, 0.9rem);
+  color: var(--accent); letter-spacing: 0.35em;
+  text-transform: uppercase; margin-bottom: 3rem;
+  display: flex; align-items: center; gap: 1rem;
+}
+.signals-title::before {
+  content: ''; flex: 0 0 40px; height: 1px;
+  background: var(--accent);
+}
+.signals-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(320px, 100%), 1fr));
+  gap: 1px; background: var(--border);
+}
+.signal-card {
+  background: var(--bg);
+  padding: 2rem;
+  position: relative; overflow: hidden;
+  opacity: 0;
+}
+.signal-card.visible { opacity: 1; }
+.signal-card::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0;
+  height: 1px; background: transparent;
+  transition: background 0.3s;
+}
+.signal-card:hover::before { background: var(--accent); }
+.signal-card:hover { background: var(--surface); }
+.signal-card-type {
+  font-family: var(--font-display); font-size: 0.55rem;
+  letter-spacing: 0.3em; text-transform: uppercase;
+  color: var(--text-faint); margin-bottom: 1rem;
+}
+.signal-card-text {
+  font-size: 0.9rem; line-height: 1.5;
+  color: var(--text-muted);
+}
+.signal-card-text strong { color: var(--text); }
+.signal-impact {
+  margin-top: 1rem;
+  font-family: var(--font-display); font-size: 0.55rem;
+  letter-spacing: 0.2em; text-transform: uppercase;
+}
+.signal-impact.high { color: var(--accent-2); }
+.signal-impact.medium { color: var(--accent); }
+.signal-impact.low { color: var(--accent-3); }
+
+/* ── OPPORTUNITIES ───────────────────────────────────────── */
+#opportunities {
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+}
+.opp-header {
+  display: flex; justify-content: space-between; align-items: baseline;
+  margin-bottom: 4rem;
+}
+.opp-title {
+  font-family: var(--font-display);
+  font-size: clamp(2rem, 5vw, 4rem);
+  font-weight: 700; line-height: 1;
+}
+.opp-count {
+  font-family: var(--font-display);
+  font-size: clamp(4rem, 10vw, 8rem);
+  color: var(--text-faint); line-height: 1;
+  font-weight: 700; letter-spacing: -0.04em;
+}
+
+.opp-list { counter-reset: opp; }
+.opp-item {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: start;
+  gap: 1.5rem 3rem;
+  padding: 2rem 0;
+  border-bottom: 1px solid var(--border);
+  position: relative;
+  opacity: 0; transform: translateX(-20px);
+  transition: opacity 0.5s ease, transform 0.5s ease;
+}
+.opp-item.visible { opacity: 1; transform: none; }
+.opp-item-left {}
+.opp-tag {
+  font-family: var(--font-display); font-size: 0.55rem;
+  letter-spacing: 0.3em; text-transform: uppercase;
+  color: var(--accent); margin-bottom: 0.5rem;
+}
+.opp-name {
+  font-family: var(--font-display);
+  font-size: clamp(1.1rem, 2.5vw, 1.7rem);
+  font-weight: 700; color: var(--text);
+  line-height: 1.1; margin-bottom: 0.75rem;
+}
+.opp-desc {
+  font-size: 0.9rem; color: var(--text-muted);
+  max-width: 560px; line-height: 1.55;
+}
+.opp-action {
+  display: flex; flex-direction: column; align-items: flex-end;
+  gap: 0.5rem;
+}
+.opp-horizon {
+  font-family: var(--font-display); font-size: 0.55rem;
+  letter-spacing: 0.2em; text-transform: uppercase;
+  color: var(--text-faint);
+}
+.opp-priority {
+  font-family: var(--font-display); font-size: 0.6rem;
+  letter-spacing: 0.2em; text-transform: uppercase;
+  padding: 0.3rem 0.75rem;
+  border-radius: 999px;
+}
+.opp-priority.critical {
+  background: rgba(255, 77, 109, 0.1);
+  color: var(--accent-2);
+  border: 1px solid rgba(255,77,109,0.3);
+}
+.opp-priority.high {
+  background: rgba(200, 255, 0, 0.08);
+  color: var(--accent);
+  border: 1px solid rgba(200,255,0,0.2);
+}
+.opp-priority.strategic {
+  background: rgba(0, 212, 255, 0.08);
+  color: var(--accent-3);
+  border: 1px solid rgba(0,212,255,0.2);
+}
+
+/* ── SYSTEMS ─────────────────────────────────────────────── */
+#systems {
+  background: var(--bg);
+  border-top: 1px solid var(--border);
+}
+.systems-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(360px, 100%), 1fr));
+  gap: 2px; background: var(--border);
+  margin-top: 3rem;
+}
+.system-card {
+  background: var(--bg); padding: 2.5rem;
+  position: relative; overflow: hidden;
+  opacity: 0;
+  transition: opacity 0.6s ease, background 0.3s;
+}
+.system-card.visible { opacity: 1; }
+.system-card:hover { background: var(--surface); }
+.system-card-accent {
+  position: absolute; top: 0; right: 0;
+  width: 1px; height: 60px;
+  background: linear-gradient(to bottom, var(--accent), transparent);
+  transition: height 0.4s cubic-bezier(0.16,1,0.3,1);
+}
+.system-card:hover .system-card-accent { height: 100%; opacity: 0.3; }
+.system-icon {
+  width: 40px; height: 40px; margin-bottom: 1.5rem;
+  border: 1px solid var(--border); border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+}
+.system-icon svg { width: 18px; height: 18px; stroke: var(--accent); fill: none; stroke-width: 1.5; }
+.system-name {
+  font-family: var(--font-display); font-weight: 700;
+  font-size: 1.1rem; margin-bottom: 0.75rem;
+  line-height: 1.2;
+}
+.system-desc {
+  font-size: 0.875rem; color: var(--text-muted);
+  line-height: 1.55; margin-bottom: 1.5rem;
+}
+.system-stack {
+  display: flex; flex-wrap: wrap; gap: 0.4rem;
+}
+.stack-tag {
+  font-family: var(--font-display); font-size: 0.55rem;
+  letter-spacing: 0.15em; text-transform: uppercase;
+  padding: 0.2rem 0.6rem;
+  background: var(--surface-2); color: var(--text-muted);
+  border-radius: 3px;
+}
+
+/* ── CONTENT IDEAS ───────────────────────────────────────── */
+#content {
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+}
+.content-heading {
+  font-family: var(--font-display);
+  font-size: clamp(0.6rem, 0.9vw, 0.75rem);
+  letter-spacing: 0.4em; text-transform: uppercase;
+  color: var(--accent); margin-bottom: 4rem;
+  display: flex; align-items: center; gap: 1rem;
+}
+.content-heading::before {
+  content: ''; flex: 0 0 40px; height: 1px; background: var(--accent);
+}
+.content-ideas { display: flex; flex-direction: column; gap: 0; }
+.idea-row {
+  display: grid; grid-template-columns: 60px 1fr auto;
+  align-items: baseline; gap: 2rem;
+  padding: 1.75rem 0;
+  border-bottom: 1px solid var(--border);
+  opacity: 0; transform: translateY(10px);
+  transition: opacity 0.4s ease, transform 0.4s ease;
+}
+.idea-row.visible { opacity: 1; transform: none; }
+.idea-row:hover .idea-title { color: var(--accent); }
+.idea-n {
+  font-family: var(--font-display); font-size: 0.6rem;
+  color: var(--text-faint); letter-spacing: 0.1em;
+}
+.idea-title {
+  font-family: var(--font-display); font-weight: 700;
+  font-size: clamp(0.9rem, 1.5vw, 1.15rem);
+  color: var(--text); transition: color 0.2s;
+  line-height: 1.25;
+}
+.idea-format {
+  font-family: var(--font-display); font-size: 0.55rem;
+  letter-spacing: 0.2em; text-transform: uppercase;
+  color: var(--text-faint); white-space: nowrap;
+}
+
+/* ── DIRECTION FINALE ────────────────────────────────────── */
+#direction {
+  background: var(--bg);
+  border-top: 1px solid var(--border);
+  min-height: 70vh;
+  display: flex; flex-direction: column; justify-content: center;
+}
+.direction-label {
+  font-family: var(--font-display); font-size: 0.65rem;
+  letter-spacing: 0.35em; text-transform: uppercase;
+  color: var(--accent); margin-bottom: 3rem;
+  display: flex; align-items: center; gap: 1rem;
+}
+.direction-label::before {
+  content: ''; flex: 0 0 40px; height: 1px; background: var(--accent);
+}
+.direction-grid {
+  display: grid; grid-template-columns: repeat(3, 1fr);
+  gap: 2px; background: var(--border); margin-top: 2rem;
+}
+.dir-card {
+  background: var(--bg); padding: 2.5rem 2rem;
+  opacity: 0;
+  transition: opacity 0.5s ease, background 0.3s;
+}
+.dir-card.visible { opacity: 1; }
+.dir-card:hover { background: var(--surface); }
+.dir-card-label {
+  font-family: var(--font-display); font-size: 0.55rem;
+  letter-spacing: 0.3em; text-transform: uppercase;
+  margin-bottom: 1.25rem; padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--border);
+}
+.dir-card-label.now { color: var(--accent-2); border-color: rgba(255,77,109,0.2); }
+.dir-card-label.exploit { color: var(--accent); border-color: rgba(200,255,0,0.2); }
+.dir-card-label.edge { color: var(--accent-3); border-color: rgba(0,212,255,0.2); }
+.dir-card-content {
+  font-size: 0.875rem; color: var(--text-muted);
+  line-height: 1.6;
+}
+.dir-card-content strong { color: var(--text); display: block; margin-bottom: 0.4rem; }
+
+/* ── FOOTER ──────────────────────────────────────────────── */
+footer {
+  padding: 2rem 2.5rem;
+  border-top: 1px solid var(--border);
+  display: flex; justify-content: space-between; align-items: center;
+  gap: 1rem;
+}
+.footer-sig {
+  font-family: var(--font-display); font-size: 0.6rem;
+  color: var(--text-faint); letter-spacing: 0.2em;
+}
+.footer-sig strong { color: var(--text-muted); }
+
+/* ── SCROLL DRIVEN LINES ─────────────────────────────────── */
+.hline {
+  height: 1px; background: var(--border);
+  transform: scaleX(0); transform-origin: left;
+  transition: transform 0.8s cubic-bezier(0.16,1,0.3,1);
+}
+.hline.expanded { transform: scaleX(1); }
+
+/* ── GLITCH ──────────────────────────────────────────────── */
+.glitch {
+  position: relative;
+}
+.glitch::before, .glitch::after {
+  content: attr(data-text);
+  position: absolute; top: 0; left: 0;
+  font-family: inherit; font-size: inherit; font-weight: inherit;
+  color: inherit;
+}
+.glitch::before {
+  animation: glitch1 3.5s infinite linear;
+  clip-path: polygon(0 0, 100% 0, 100% 33%, 0 33%);
+  transform: translate(-2px, -1px);
+  color: var(--accent-2); opacity: 0;
+}
+.glitch::after {
+  animation: glitch2 4s infinite linear;
+  clip-path: polygon(0 66%, 100% 66%, 100% 100%, 0 100%);
+  transform: translate(2px, 1px);
+  color: var(--accent-3); opacity: 0;
+}
+@keyframes glitch1 {
+  0%, 92%, 100% { opacity: 0; }
+  93%, 95% { opacity: 0.8; transform: translate(-3px, -1px); }
+  94% { transform: translate(3px, 1px); }
+}
+@keyframes glitch2 {
+  0%, 88%, 100% { opacity: 0; }
+  89%, 91% { opacity: 0.6; transform: translate(3px, 0); }
+  90% { transform: translate(-2px, 1px); }
+}
+
+/* ── RESPONSIVE ──────────────────────────────────────────── */
+@media (max-width: 768px) {
+  nav { padding: 1.25rem 1.5rem; }
+  .nav-index { display: none; }
+  .hero-title { font-size: clamp(3rem, 14vw, 5rem); }
+  .shift-item { grid-template-columns: 40px 1fr; gap: 0 1.5rem; }
+  .opp-item { grid-template-columns: 1fr; }
+  .opp-action { align-items: flex-start; }
+  .direction-grid { grid-template-columns: 1fr; }
+  .idea-row { grid-template-columns: 40px 1fr; }
+  .idea-format { display: none; }
+  #cursor-dot, #cursor-ring { display: none; }
+  body { cursor: auto; }
+  .hero-bottom { flex-direction: column; }
+}
+</style>
+</head>
+<body>
+
+<!-- CURSOR -->
+<div id="cursor-dot"></div>
+<div id="cursor-ring"></div>
+
+<!-- PROGRESS -->
+<div id="progress"></div>
+
+<!-- NAV -->
+<nav>
+  <a href="#hero" class="nav-logo">Signal</a>
+  <ul class="nav-index">
+    <li><a href="#shifts">Shifts</a></li>
+    <li><a href="#signals-grid">Signaux</a></li>
+    <li><a href="#opportunities">Opps</a></li>
+    <li><a href="#systems">Systèmes</a></li>
+    <li><a href="#content">Contenu</a></li>
+    <li><a href="#direction">Direction</a></li>
+  </ul>
+  <span class="nav-meta">W14 · Avril 2026</span>
+</nav>
+
+<!-- ══ HERO ══════════════════════════════════════════════ -->
+<section id="hero">
+  <div class="hero-bg-grid"></div>
+  <div class="hero-scan"></div>
+
+  <p class="hero-eyebrow" id="hero-eyebrow">
+    Veille IA · Europe · Semaine du 7 au 13 avril 2026
+  </p>
+
+  <h1 class="hero-title" id="hero-title">
+    <span class="line-1 glitch" data-text="LE MONDE">LE MONDE</span><br>
+    <span class="line-2">CHANGE.</span>
+  </h1>
+
+  <div class="hero-bottom">
+    <p class="hero-descriptor" id="hero-desc">
+      5 shifts. 8 signaux. 5 opportunités. 3 systèmes. 5 idées.
+      Une direction claire. Pas une newsletter — une arme stratégique.
+    </p>
+    <div class="hero-scroll-cue" id="hero-scroll">Explorez</div>
+  </div>
+</section>
+
+<!-- ══ SHIFTS ════════════════════════════════════════════ -->
+<section id="shifts">
+  <div class="section-label">
+    <span class="section-number">01</span>
+    Shifts majeurs — Ce qui change vraiment
+  </div>
+
+  <p class="shifts-intro" id="shifts-intro">
+    Pas des <em>nouvelles</em>.<br>Des <em>ruptures</em>.
+  </p>
+
+  <div class="shift-item" id="s1">
+    <div class="shift-num">01 —</div>
+    <div class="shift-body">
+      <div class="shift-title">De l'outil à l'acteur économique</div>
+      <div class="shift-desc">Les agents IA ne "assistent" plus. Ils achètent (Mastercard Agent Pay), ils codent (Claude Cowork), ils gèrent des workflows complets sans supervision. L'IA est passée de copilote à coworker. Ce shift est irréversible.</div>
+      <span class="shift-tag">Agentic Economy</span>
+    </div>
+  </div>
+
+  <div class="shift-item" id="s2">
+    <div class="shift-num">02 —</div>
+    <div class="shift-body">
+      <div class="shift-title">Open-source = parité frontier</div>
+      <div class="shift-desc">GLM-5.1 (MIT, 744B params, 40B actifs) bat GPT-5.4 sur SWE-Bench Pro. Gemma 4 31B écrase des modèles 20× plus grands. Le monopole des labs propriétaires est terminé. Construire sur open-source n'est plus un compromis.</div>
+      <span class="shift-tag">Open Source Win</span>
+    </div>
+  </div>
+
+  <div class="shift-item" id="s3">
+    <div class="shift-num">03 —</div>
+    <div class="shift-body">
+      <div class="shift-title">Le raisonnement bat le scaling</div>
+      <div class="shift-desc">GPT-5.4 atteint 83% sur GDPVal — niveau expert humain sur tâches à valeur économique. L'ère "plus grand = meilleur" est close. La compétition se joue maintenant sur le post-training, la mémoire persistante et les agents auto-vérificateurs.</div>
+      <span class="shift-tag">Reasoning > Scale</span>
+    </div>
+  </div>
+
+  <div class="shift-item" id="s4">
+    <div class="shift-num">04 —</div>
+    <div class="shift-body">
+      <div class="shift-title">L'Europe entre dans la phase de conformité forcée</div>
+      <div class="shift-desc">Août 2026 : EU AI Act full enforcement. Fines jusqu'à €35M ou 7% du CA mondial. La BCG/McKinsey de l'IA sera celui qui aide les PME européennes à se conformer. La régulation crée le marché.</div>
+      <span class="shift-tag">EU AI Act · J-120</span>
+    </div>
+  </div>
+
+  <div class="shift-item" id="s5">
+    <div class="shift-num">05 —</div>
+    <div class="shift-body">
+      <div class="shift-title">Le taux d'adoption devient la variable décisive</div>
+      <div class="shift-desc">ECB: adoption IA parmi les employés euro zone 26%→40% en un an. Vitesse sans précédent — plus rapide qu'internet ou les PC. Mais 80% des manufacturiers ne sont "pas prêts". L'avantage compétitif sera dans la vitesse d'implémentation, pas dans l'accès aux outils.</div>
+      <span class="shift-tag">Adoption Gap</span>
+    </div>
+  </div>
+</section>
+
+<!-- ══ SIGNALS TICKER ════════════════════════════════════ -->
+<section id="signals" style="padding:0;">
+  <div class="ticker-wrap">
+    <div class="ticker-track" id="ticker">
+      <!-- filled by JS -->
+    </div>
+  </div>
+</section>
+
+<!-- ══ SIGNALS GRID ══════════════════════════════════════ -->
+<section id="signals-grid" style="padding-top: 5rem;">
+  <div class="signals-title">
+    <span class="section-number">02</span>
+    Signaux à fort impact
+  </div>
+  <div class="signals-grid" id="signals-container">
+    <!-- filled by JS -->
+  </div>
+</section>
+
+<!-- ══ OPPORTUNITIES ═════════════════════════════════════ -->
+<section id="opportunities">
+  <div class="opp-header">
+    <div>
+      <div class="section-label" style="margin-bottom:1rem;">
+        <span class="section-number">03</span>
+        Opportunités business concrètes
+      </div>
+      <div class="opp-title">Maintenant<br>ou jamais.</div>
+    </div>
+    <div class="opp-count">05</div>
+  </div>
+
+  <div class="opp-list" id="opp-list">
+    <div class="opp-item">
+      <div class="opp-item-left">
+        <div class="opp-tag">Compliance · Formation</div>
+        <div class="opp-name">AI Act Compliance Consulting</div>
+        <div class="opp-desc">J-120 avant enforcement total. Les PME suisses et franco-suisses ignorent à 80% leurs obligations. Formations certifiantes + audit = cash flow immédiat. Angle différenciant : NLPD (Suisse) + EU AI Act en pack.</div>
+      </div>
+      <div class="opp-action">
+        <span class="opp-horizon">Horizon: 0–3 mois</span>
+        <span class="opp-priority critical">Urgent</span>
+      </div>
+    </div>
+
+    <div class="opp-item">
+      <div class="opp-item-left">
+        <div class="opp-tag">Infrastructure · Automation</div>
+        <div class="opp-name">Agent Workflows as a Service</div>
+        <div class="opp-desc">Déployer des pipelines n8n + Gemma 4 / GLM-5.1 local sur infra privée pour PME. GDPR-natif par design. Modèle: setup fee + maintenance mensuel. Ton stack Coolify/Hostinger = avantage réel.</div>
+      </div>
+      <div class="opp-action">
+        <span class="opp-horizon">Horizon: 1–4 mois</span>
+        <span class="opp-priority high">Prioritaire</span>
+      </div>
+    </div>
+
+    <div class="opp-item">
+      <div class="opp-item-left">
+        <div class="opp-tag">Formation · Certification</div>
+        <div class="opp-name">Brevet Fédéral AI Business Specialist</div>
+        <div class="opp-desc">39% des SME européennes utilisent l'IA régulièrement — mais peu peuvent la valider officiellement. Le timing de ta certification crée une autorité rare. Deviens LA référence suisse romande pour la formation IA certifiante en entreprise.</div>
+      </div>
+      <div class="opp-action">
+        <span class="opp-horizon">Horizon: 3–12 mois</span>
+        <span class="opp-priority high">Prioritaire</span>
+      </div>
+    </div>
+
+    <div class="opp-item">
+      <div class="opp-item-left">
+        <div class="opp-tag">Tech · GDPR</div>
+        <div class="opp-name">Open-Source AI Local Deployment</div>
+        <div class="opp-desc">Gemma 4 31B + Ollama + Coolify = modèle frontier qui tourne sur un seul GPU, hébergé en Suisse, zéro données vers US. Offre packagée pour cabinets médicaux, fiduciaires, RH. Le RGPD devient un argument commercial, pas une contrainte.</div>
+      </div>
+      <div class="opp-action">
+        <span class="opp-horizon">Horizon: 2–6 mois</span>
+        <span class="opp-priority strategic">Stratégique</span>
+      </div>
+    </div>
+
+    <div class="opp-item">
+      <div class="opp-item-left">
+        <div class="opp-tag">Contenu · Production</div>
+        <div class="opp-name">AI Content Production Studio</div>
+        <div class="opp-desc">Claude Sonnet 4.6 pour contenu long, pipelines multimodaux pour vidéo/image, n8n pour orchestration. Studio de production IA pour entreprises suisses qui veulent scaler leur contenu sans agence traditionnelle.</div>
+      </div>
+      <div class="opp-action">
+        <span class="opp-horizon">Horizon: 2–8 mois</span>
+        <span class="opp-priority strategic">Stratégique</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ SYSTEMS ═══════════════════════════════════════════ -->
+<section id="systems">
+  <div class="section-label">
+    <span class="section-number">04</span>
+    Systèmes exploitables · Construisez maintenant
+  </div>
+
+  <div class="systems-grid">
+    <div class="system-card">
+      <div class="system-card-accent"></div>
+      <div class="system-icon">
+        <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+      </div>
+      <div class="system-name">Pipeline n8n + LLM Local</div>
+      <div class="system-desc">Workflow automation avec Gemma 4 / GLM-5.1 hébergé en Suisse. GDPR natif, coût marginal quasi-nul après setup, contrôle total des données. Remplace 70% des cas d'usage API OpenAI payants.</div>
+      <div class="system-stack">
+        <span class="stack-tag">n8n</span>
+        <span class="stack-tag">Coolify</span>
+        <span class="stack-tag">Ollama</span>
+        <span class="stack-tag">Gemma 4</span>
+        <span class="stack-tag">Hostinger VPS</span>
+      </div>
+    </div>
+
+    <div class="system-card">
+      <div class="system-card-accent"></div>
+      <div class="system-icon">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/><path d="M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
+      </div>
+      <div class="system-name">Agent de Veille Automatisée</div>
+      <div class="system-desc">Agent qui scrape, résume, analyse et publie une veille hebdo auto. Transformation de la curation en contenu différenciant. De consommateur de veille → producteur de veille → autorité sectorielle.</div>
+      <div class="system-stack">
+        <span class="stack-tag">n8n</span>
+        <span class="stack-tag">RSS / Perplexity API</span>
+        <span class="stack-tag">Claude Sonnet 4.6</span>
+        <span class="stack-tag">Notion</span>
+        <span class="stack-tag">LinkedIn Auto-post</span>
+      </div>
+    </div>
+
+    <div class="system-card">
+      <div class="system-card-accent"></div>
+      <div class="system-icon">
+        <svg viewBox="0 0 24 24"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
+      </div>
+      <div class="system-name">Plateforme Formation Adaptive</div>
+      <div class="system-desc">Système qui adapte le contenu de formation selon le niveau et le profil. Auto-évaluation, parcours personnalisé, certification automatique. Transforme une formation one-shot en produit scalable récurrent.</div>
+      <div class="system-stack">
+        <span class="stack-tag">n8n</span>
+        <span class="stack-tag">LLM (Claude / Gemma)</span>
+        <span class="stack-tag">Notion / Lovable</span>
+        <span class="stack-tag">Tracking Progress</span>
+        <span class="stack-tag">Certificat auto</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ CONTENT IDEAS ══════════════════════════════════════ -->
+<section id="content">
+  <div class="content-heading">
+    <span class="section-number">05</span>
+    Idées contenu différenciantes
+  </div>
+
+  <div class="content-ideas">
+    <div class="idea-row">
+      <div class="idea-n">01</div>
+      <div class="idea-title">"J'ai testé 6 modèles open-source en Suisse : lequel passe l'AI Act ?"</div>
+      <div class="idea-format">Test · LinkedIn</div>
+    </div>
+    <div class="idea-row">
+      <div class="idea-n">02</div>
+      <div class="idea-title">"Construire une PME IA en 48h avec seulement des outils open-source"</div>
+      <div class="idea-format">Défi · Vidéo</div>
+    </div>
+    <div class="idea-row">
+      <div class="idea-n">03</div>
+      <div class="idea-title">"L'agent IA qui remplace ton stagiaire : test réel sur 30 tâches"</div>
+      <div class="idea-format">Comparatif · Substack</div>
+    </div>
+    <div class="idea-row">
+      <div class="idea-n">04</div>
+      <div class="idea-title">"Pourquoi le Brevet Fédéral AI va valoir de l'or en 2027"</div>
+      <div class="idea-format">Opinion · LinkedIn</div>
+    </div>
+    <div class="idea-row">
+      <div class="idea-n">05</div>
+      <div class="idea-title">"Mon setup n8n + Gemma 4 local = zéro risque RGPD, zéro coût API"</div>
+      <div class="idea-format">Tuto · Vidéo · Blog</div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ DIRECTION FINALE ═══════════════════════════════════ -->
+<section id="direction">
+  <div class="direction-label">
+    <span class="section-number">06</span>
+    Direction stratégique claire
+  </div>
+
+  <div class="direction-grid">
+    <div class="dir-card">
+      <div class="dir-card-label now">Se positionner maintenant</div>
+      <div class="dir-card-content">
+        <strong>Expert EU AI Act · Suisse romande</strong>
+        Deadline août 2026 = fenêtre de 120 jours. Les PME paniquent et cherchent des experts locaux. La niche "Suisse + NLPD + EU AI Act" est quasi-vierge. Chaque semaine de retard est perdue.
+      </div>
+    </div>
+    <div class="dir-card">
+      <div class="dir-card-label exploit">Exploiter immédiatement</div>
+      <div class="dir-card-content">
+        <strong>Stack open-source GDPR-natif</strong>
+        Ton infrastructure Coolify/Hostinger + n8n + Gemma 4 = proposition unique. Construis et documente un cas client réel cette semaine. Le contenu de ce déploiement = 3 mois de posts LinkedIn différenciants.
+      </div>
+    </div>
+    <div class="dir-card">
+      <div class="dir-card-label edge">Créer l'avantage différenciant</div>
+      <div class="dir-card-content">
+        <strong>Autorité via le Brevet Fédéral</strong>
+        Dans 18 mois, "AI Business Specialist certifié" + "premier formateur certifiant romand" = monopole de perception. Commence maintenant le contenu qui construit cette autorité avant d'avoir le papier.
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ FOOTER ════════════════════════════════════════════ -->
+<footer>
+  <div class="footer-sig">
+    <strong>SIGNAL</strong> — Veille IA expérimentale · W14 · 13 avril 2026
+  </div>
+  <div class="footer-sig">
+    Données: ECB · Fladgate AI Round-up · WhatLLM · LMCouncil · Morgan Stanley
+  </div>
+</footer>
+
+<script>
+/* ── CURSOR ──────────────────────────────────────────────── */
+const dot = document.getElementById('cursor-dot');
+const ring = document.getElementById('cursor-ring');
+let mx = -100, my = -100, rx = -100, ry = -100;
+document.addEventListener('mousemove', e => { mx = e.clientX; my = e.clientY; });
+function animCursor() {
+  dot.style.left = mx + 'px'; dot.style.top = my + 'px';
+  rx += (mx - rx) * 0.12; ry += (my - ry) * 0.12;
+  ring.style.left = rx + 'px'; ring.style.top = ry + 'px';
+  requestAnimationFrame(animCursor);
+}
+animCursor();
+
+/* ── PROGRESS BAR ────────────────────────────────────────── */
+const progress = document.getElementById('progress');
+window.addEventListener('scroll', () => {
+  const s = document.documentElement.scrollTop;
+  const h = document.documentElement.scrollHeight - window.innerHeight;
+  progress.style.transform = `scaleX(${s / h})`;
+});
+
+/* ── HERO ENTRANCE ───────────────────────────────────────── */
+window.addEventListener('load', () => {
+  gsap.registerPlugin(ScrollTrigger);
+
+  gsap.timeline({ delay: 0.3 })
+    .to('#hero-eyebrow', { opacity: 1, duration: 0.8, ease: 'power3.out' })
+    .from('.hero-title .line-1', { y: 60, opacity: 0, duration: 1, ease: 'power3.out' }, '-=0.4')
+    .from('.hero-title .line-2', { y: 60, opacity: 0, duration: 1, ease: 'power3.out' }, '-=0.7')
+    .to('#hero-desc', { opacity: 1, duration: 0.7, ease: 'power2.out' }, '-=0.3')
+    .to('#hero-scroll', { opacity: 1, duration: 0.5 }, '-=0.2');
+
+  /* ── SHIFT ITEMS ─────────────────────────────────────── */
+  document.querySelectorAll('.shift-item').forEach((el, i) => {
+    ScrollTrigger.create({
+      trigger: el, start: 'top 85%',
+      onEnter: () => {
+        setTimeout(() => el.classList.add('visible'), i * 80);
+      }
+    });
+  });
+
+  /* ── SIGNAL CARDS ────────────────────────────────────── */
+  document.querySelectorAll('.signal-card').forEach((el, i) => {
+    ScrollTrigger.create({
+      trigger: el, start: 'top 88%',
+      onEnter: () => setTimeout(() => el.classList.add('visible'), i * 60)
+    });
+  });
+
+  /* ── OPP ITEMS ───────────────────────────────────────── */
+  document.querySelectorAll('.opp-item').forEach((el, i) => {
+    ScrollTrigger.create({
+      trigger: el, start: 'top 88%',
+      onEnter: () => setTimeout(() => el.classList.add('visible'), i * 100)
+    });
+  });
+
+  /* ── SYSTEM CARDS ────────────────────────────────────── */
+  document.querySelectorAll('.system-card').forEach((el, i) => {
+    ScrollTrigger.create({
+      trigger: el, start: 'top 88%',
+      onEnter: () => setTimeout(() => el.classList.add('visible'), i * 120)
+    });
+  });
+
+  /* ── IDEA ROWS ───────────────────────────────────────── */
+  document.querySelectorAll('.idea-row').forEach((el, i) => {
+    ScrollTrigger.create({
+      trigger: el, start: 'top 90%',
+      onEnter: () => setTimeout(() => el.classList.add('visible'), i * 70)
+    });
+  });
+
+  /* ── DIR CARDS ───────────────────────────────────────── */
+  document.querySelectorAll('.dir-card').forEach((el, i) => {
+    ScrollTrigger.create({
+      trigger: el, start: 'top 88%',
+      onEnter: () => setTimeout(() => el.classList.add('visible'), i * 150)
+    });
+  });
+});
+
+/* ── TICKER ──────────────────────────────────────────────── */
+const signals = [
+  { text: 'Claude Mythos 5 · 10T paramètres · En test interne Anthropic', type: 'hot' },
+  { text: 'OpenAI raise $122B · Valorisation $852B', type: 'hot' },
+  { text: 'Gemma 4 31B · Apache 2.0 · Un seul GPU · #3 open model mondial', type: 'cold' },
+  { text: 'Mastercard Agent Pay · IA achète de façon autonome via ChatGPT', type: '' },
+  { text: 'GLM-5.1 · MIT license · Bat GPT-5.4 sur SWE-Bench Pro', type: 'cold' },
+  { text: 'EU AI Act · Deadline AOÛT 2026 · Fines jusqu\'à €35M', type: 'hot' },
+  { text: 'ECB: adoption IA employés 26%→40% en 2025 · Record historique', type: '' },
+  { text: 'Salesforce Slack · 30 features IA · Restructuration workflows', type: '' },
+  { text: 'Seed AI startups YC · Valorisation ~$40M dès le départ', type: 'hot' },
+  { text: 'Apply AI Strategy EU · AI Continent Action Plan · Financement massif', type: 'cold' },
+];
+const track = document.getElementById('ticker');
+const doubled = [...signals, ...signals];
+doubled.forEach(s => {
+  const div = document.createElement('div');
+  div.className = `ticker-item ${s.type}`;
+  div.innerHTML = `<div class="ticker-dot"></div><span>${s.text}</span>`;
+  track.appendChild(div);
+});
+
+/* ── SIGNALS GRID ────────────────────────────────────────── */
+const signalData = [
+  { type: 'Modèle · Frontier', text: '<strong>Claude Mythos 5</strong> en test interne: 10T paramètres. Step-change de capacités. Potential Q2 2026. Anthropic prépare quelque chose de différent.', impact: 'high' },
+  { type: 'Infrastructure · Finance', text: '<strong>OpenAI $122B raise</strong> à $852B de valorisation. Amazon, Nvidia, SoftBank. Signal de consolidation autour des labs américains. Le gap avec l\'Europe se creuse.', impact: 'high' },
+  { type: 'Open Source · Edge', text: '<strong>Gemma 4 31B</strong> — Apache 2.0, GPU unique, #3 mondial. 85.2% MMLU Pro. Bat des modèles 20× plus grands. Ouvre la voie à des déploiements GDPR-natifs.', impact: 'medium' },
+  { type: 'Commerce · Agentic', text: '<strong>Mastercard Agent Pay</strong>: les agents IA font des achats autonomes via ChatGPT. L\'agentic commerce devient réalité. Microsoft + OpenAI validé.', impact: 'medium' },
+  { type: 'Open Source · Code', text: '<strong>GLM-5.1 MIT license</strong>: 744B params, 40B actifs (MoE). Bat Claude Opus 4.6 et GPT-5.4 sur SWE-Bench Pro. Open source gagne la course au coding.', impact: 'high' },
+  { type: 'Régulation · EU', text: '<strong>EU AI Act août 2026</strong>: conformité obligatoire. Fines jusqu\'à €35M ou 7% CA mondial. 80% des entreprises ne sont pas prêtes. Fenêtre de consulting ouverte.', impact: 'high' },
+  { type: 'Macro · Europe', text: '<strong>ECB Survey</strong>: adoption IA employés 26%→40% en 2025. Plus rapide qu\'internet ou les PC. PME investissent en moyenne 9% de leur capex dans l\'IA en 2026.', impact: 'medium' },
+  { type: 'Enterprise · Produit', text: '<strong>Salesforce Slack + 30 features IA</strong>: automatisation emails, search augmentée, réponses auto. L\'IA s\'intègre dans l\'outil existant — not a new tool.', impact: 'low' },
+];
+const container = document.getElementById('signals-container');
+signalData.forEach(s => {
+  const card = document.createElement('div');
+  card.className = 'signal-card';
+  const impactLabel = s.impact === 'high' ? '↑ Impact élevé' : s.impact === 'medium' ? '→ Impact moyen' : '↓ Impact secondaire';
+  card.innerHTML = `
+    <div class="signal-card-type">${s.type}</div>
+    <div class="signal-card-text">${s.text}</div>
+    <div class="signal-impact ${s.impact}">${impactLabel}</div>
+  `;
+  container.appendChild(card);
+});
+
+/* ── SHIFTS INTRO CHARS ──────────────────────────────────── */
+Splitting({ target: '#shifts-intro', by: 'words' });
+</script>
+</body>
+</html>
